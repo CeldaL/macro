@@ -1,95 +1,61 @@
--- ✅ Super Fast Punch Script (sin bugs de input/UI)
 local Players = game:GetService("Players")
 local InputService = game:GetService("UserInputService")
-local RunService = game:GetService("RunService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local plr = Players.LocalPlayer
 local char = plr.Character or plr.CharacterAdded:Wait()
 local hum = char:WaitForChild("Humanoid")
-local root = char:WaitForChild("HumanoidRootPart")
 
 local events = ReplicatedStorage:WaitForChild("Events")
 local anims = ReplicatedStorage:WaitForChild("Animations")
 
-local punchAnims = {}
-for i = 1, 5 do
-    if anims:FindFirstChild("combat" .. i) then
-        table.insert(punchAnims, hum:LoadAnimation(anims["combat" .. i]))
-    end
-end
+-- Usa la animación por defecto del juego
+local punchAnim = hum:LoadAnimation(anims:WaitForChild("combat1")) -- puedes cambiar "combat1" si hay otra por defecto
 
--- Variables de control
+-- Variables
 local punching = false
 local combo = 1
-local lastPunch = 0
-local punchCooldown = 0.01
+local cooldown = false
+local hitDelay = 3 -- Tiempo mínimo entre golpes (1 segundo)
 
--- Asegura que energía y salud existan
-_G.energy = _G.energy or 100
-_G.lastAttack = _G.lastAttack or 0
+-- Solo un golpe por clic, con cooldown
+local function SingleHit()
+    if hum.Health <= 0 or cooldown then return end
 
-local function CanPunch()
-    return hum and hum.Health > 0 and _G.energy > 0 and (tick() - lastPunch >= punchCooldown)
-end
+    cooldown = true
 
-local function Punch()
-    if not CanPunch() then return end
+    -- Reproduce la animación
+    punchAnim:Play()
 
-    lastPunch = tick()
-    _G.lastAttack = tick()
-
-    local anim = punchAnims[combo]
-    if anim then
-        anim:Play(0.05, 1, 3)
-        task.delay(0.01, function()
-            anim:AdjustSpeed(15)
-        end)
-        task.delay(0.05, function()
-            anim:Stop()
-        end)
-    end
-
-    events.Punch:FireServer(0.01, punchCooldown, combo)
-    _G.energy = math.max(_G.energy - 10, 0)
+    -- Solo un golpe
+    events.Punch:FireServer(0.1, 0, combo)
 
     combo = combo + 1
-    if combo > #punchAnims then combo = 1 end
+    if combo > 5 then combo = 1 end
+
+    -- Esperar antes de permitir otro golpe
+    task.delay(hitDelay, function()
+        cooldown = false
+    end)
 end
 
--- Ejecuta el golpeo en cada Heartbeat si se está presionando click
-RunService.Heartbeat:Connect(function()
-    if punching then
-        Punch()
-    end
-end)
-
--- Control de input sin bloqueo de UI
-InputService.InputBegan:Connect(function(input, processed)
-    if not processed and input.UserInputType == Enum.UserInputType.MouseButton1 then
+-- Input
+InputService.InputBegan:Connect(function(input, gameProcessed)
+    if not gameProcessed and input.UserInputType == Enum.UserInputType.MouseButton1 then
         punching = true
+        SingleHit()
     end
 end)
 
-InputService.InputEnded:Connect(function(input, processed)
+InputService.InputEnded:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 then
         punching = false
     end
 end)
 
--- Reiniciar todo si el personaje muere/reaparece
+-- En caso de reaparecer
 plr.CharacterAdded:Connect(function(newChar)
     char = newChar
     hum = char:WaitForChild("Humanoid")
-    root = char:WaitForChild("HumanoidRootPart")
-
-    punching = false
-    combo = 1
-
-    punchAnims = {}
-    for i = 1, 5 do
-        if anims:FindFirstChild("combat" .. i) then
-            table.insert(punchAnims, hum:LoadAnimation(anims["combat" .. i]))
-        end
-    end
+    punchAnim = hum:LoadAnimation(anims:WaitForChild("combat1"))
 end)
