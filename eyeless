@@ -1,84 +1,235 @@
-local tick_result1_2 = tick()
-local punchSpeed = 3  -- Aceleración extrema del golpe
-local comboSpeed = 2  -- Aceleración del combo aún mayor
+local Players = game:GetService("Players")
 
-local function Conditions()
-    -- Simplificamos y optimizamos las condiciones
-    return enabled and hum.Health > 0 and hum.WalkSpeed > 0 and _G.energy > 0
+local InputService = game:GetService("UserInputService")
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+
+
+local plr = Players.LocalPlayer
+
+local char = plr.Character or plr.CharacterAdded:Wait()
+
+local hum = char:WaitForChild("Humanoid")
+
+
+
+local events = ReplicatedStorage:WaitForChild("Events")
+
+local anims = ReplicatedStorage:WaitForChild("Animations")
+
+
+
+-- Animaciones
+
+local punchAnim = hum:LoadAnimation(anims:WaitForChild("combat1"))
+
+-- local chargeAnim = hum:LoadAnimation(anims:WaitForChild("charge_strong")) -- Comentado temporalmente
+
+
+
+-- Variables de velocidad de golpe
+
+local baseHitDelay = 2 -- ¡Velocidad aún más lenta!
+
+local fastHitDelayMultiplier = 0.5
+
+local currentHitDelay = baseHitDelay
+
+
+
+-- Variables de estado de carga
+
+local isChargingStrong = false -- Comentado temporalmente
+
+local chargeStartTime = nil -- Comentado temporalmente
+
+local chargeDuration = 2 -- Comentado temporalmente
+
+
+
+-- Variables de golpe normal
+
+local punching = false
+
+local combo = 1
+
+local cooldown = false
+
+local firstPunchIgnored = true
+
+local firstHitDone = false -- Nueva variable para rastrear si ya se dio el primer golpe real
+
+
+
+-- Función para manejar el golpe normal
+
+local function NormalHit()
+
+    if hum.Health <= 0 or cooldown -- or isChargingStrong then return end
+
+    then
+
+        return
+
+    end
+
+
+
+    cooldown = true
+
+
+
+    if firstPunchIgnored then
+
+        firstPunchIgnored = false
+
+        cooldown = false
+
+        return
+
+    end
+
+
+
+    local animationSpeed = 0.7 -- Velocidad de la animación más lenta
+
+    if not firstHitDone then
+
+        -- Aquí podríamos intentar reproducir una animación diferente si existe para el primer golpe derecho
+
+        punchAnim:Play(nil, nil, animationSpeed)
+
+        firstHitDone = true
+
+    else
+
+        punchAnim:Play(nil, nil, animationSpeed)
+
+    end
+
+
+
+    events.Punch:FireServer(0.05, 0, combo)
+
+
+
+    combo = combo + 1
+
+    if combo > 5 then combo = 1 end
+
+
+
+    task.delay(currentHitDelay, function()
+
+        cooldown = false
+
+    end)
+
 end
 
--- Reducimos el tiempo de espera entre clics a 0.05 segundos
-local function StartPunch()
-    local tick_result1_2 = tick()
-    mouseDown = true
-    while tick() - tick_result1_2 < 0.05 and mouseDown do  -- Reducción máxima
-        Shared.Step()
-    end
-    local var18 = false
-    if tick() - tick_result1_2 >= 0.05 then
-        var18 = true
-    end
-    Punch(var18)
+
+
+-- Función para iniciar la carga del golpe fuerte
+
+local function StartCharge()
+
+    -- if hum.Health <= 0 or isChargingStrong then return end
+
+    -- isChargingStrong = true
+
+    -- chargeStartTime = tick()
+
+    -- -- chargeAnim:Play()
+
+    -- currentHitDelay = baseHitDelay * fastHitDelayMultiplier
+
+    print("Start Charge")
+
 end
 
-function Punch(arg1)
-    local tick_result1 = tick()
-    local combo = 1  -- Inicializamos el combo a 1
-    
-    if combo == 5 then
-        combo = 0
-    end
-    
-    if Conditions() then
-        lastPunch = tick_result1
-        _G.lastAttack = tick_result1
-        nextPunch = tick_result1 + 5
-        
-        combo = combo + 1
-        if combo > 5 then
-            combo = 1
-        end
 
-        local punchAnim = punchAnims[combo]
-        punchAnim:Play(0.1, 1, punchSpeed)  -- Animación más rápida
-        local p = root.CFrame.p
-        
-        -- Detectar y golpear el objetivo más cercano
-        local target = Shared.GetClosestActor(Shared.GetActorsInRange(p, Shared_GetCamDirection(), math.clamp(hum.WalkSpeed * comboSpeed, 20, 100), 360, char))
-        if target then
-            Shared.FaceTarget(root, target.HumanoidRootPart, 0.5, true)
-            events.Punch:FireServer(math.max(0.3, hitDelays[combo]), hitDelays[combo], combo)
-            _G.lastAction = math.max(tick_result1, _G.lastAction)
-            _G.energy = math.max(_G.energy - 5 * 2, 0)  -- Reducción de energía más rápida
-        end
-        
-        -- Aceleración del golpe (animación más rápida)
-        punchAnim:AdjustSpeed(2.5)  -- Aceleramos aún más la animación
-        wait(0.2)  -- Reduce la espera entre los golpes
 
-        -- Vuelve a la velocidad original de la animación
-        punchAnim:AdjustSpeed(0)
-        wait(0.15)  -- Espera antes de detener la animación
-        punchAnim:Stop(0.3, 1, 0)
-    end
+-- Función para liberar el golpe fuerte
+
+local function ReleaseCharge()
+
+    -- if not isChargingStrong then return end
+
+    -- isChargingStrong = false
+
+    -- -- chargeAnim:Stop()
+
+    print("Release Charge")
+
+    -- print("¡Golpe fuerte!")
+
+    -- currentHitDelay = baseHitDelay
+
 end
 
--- Configuración de Input (respuesta ultra rápida)
-function InputBegan(arg1, arg2)
-    if not arg2 then
-        local UserInputType = arg1.UserInputType
-        if UserInputType == Enum.UserInputType.MouseButton1 then
-            StartPunch()  -- Aceleración extrema al iniciar el golpe
-        end
-    end
-end
 
-function InputEnded(arg1, arg2)
-    if not arg2 and arg1.UserInputType == Enum.UserInputType.MouseButton1 then
-        mouseDown = false  -- Detiene el golpe cuando se suelta el clic
-    end
-end
 
--- Conexión de eventos
-InputService.InputBegan:connect(InputBegan)
-InputService.InputEnded:connect(InputEnded)
+-- Input
+
+InputService.InputBegan:Connect(function(input, gameProcessed)
+
+    if not gameProcessed then
+
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+
+            punching = true
+
+            NormalHit()
+
+        elseif input.UserInputType == Enum.UserInputType.MouseButton2 then
+
+            StartCharge()
+
+        end
+
+    end
+
+end)
+
+
+
+InputService.InputEnded:Connect(function(input)
+
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+
+        punching = false
+
+    elseif input.UserInputType == Enum.UserInputType.MouseButton2 then
+
+        ReleaseCharge()
+
+    end
+
+end)
+
+
+
+-- En caso de reaparecer
+
+plr.CharacterAdded:Connect(function(newChar)
+
+    char = newChar
+
+    hum = char:WaitForChild("Humanoid")
+
+    punchAnim = hum:LoadAnimation(anims:WaitForChild("combat1"))
+
+    -- chargeAnim = hum:LoadAnimation(anims:WaitForChild("charge_strong"))
+
+    firstPunchIgnored = true
+
+    isChargingStrong = false
+
+    chargeStartTime = nil
+
+    currentHitDelay = baseHitDelay
+
+    firstHitDone = false -- Resetear al reaparecer
+
+end)
