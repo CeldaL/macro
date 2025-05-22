@@ -1,0 +1,11 @@
+-- ⚡ Ultra Fast Auto Clicker para Roblox (ataques rápidos)
+-- Asegúrate de tener tu poder o habilidad equipada
+
+local VirtualUser = game:service("VirtualUser")
+local RunService = game:service("RunService")
+
+RunService.RenderStepped:Connect(function()
+    VirtualUser:Button1Down(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
+    VirtualUser:Button1Up(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
+    task.wait(0.0001) -- ⚠️ Puedes probar 0.005, pero 0.01 ya es MUY rápido
+end)
