@@ -6,19 +6,19 @@ local isAutoClickerActive = false
 local clickInterval = 0.01 -- Ajusta el tiempo entre clicks
 local lastClickTime = 0
 
--- Función para activar o desactivar el auto clicker
+-- Función para activar o desactivar el auto clicker (sin mensajes)
 local function toggleAutoClicker()
     isAutoClickerActive = not isAutoClickerActive
-    print("Auto Clicker está ahora " .. (isAutoClickerActive and "ACTIVO" or "INACTIVO"))
+    -- Sin print aquí
 end
 
--- Detecta clicks manuales y tecla F1 para toggle
+-- Detecta clicks manuales y tecla F1 para toggle (sin mensajes)
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
     if not gameProcessed then
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
             if not isAutoClickerActive then
                 isAutoClickerActive = true
-                print("Auto Clicker ACTIVADO automáticamente tras detectar click manual")
+                -- Sin print aquí
             end
         elseif input.KeyCode == Enum.KeyCode.F1 then
             toggleAutoClicker()
