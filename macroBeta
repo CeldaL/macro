@@ -3,22 +3,18 @@ local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 
 local isAutoClickerActive = false
-local clickInterval = 0.01 -- Ajusta el tiempo entre clicks
+local clickInterval = 0.001 -- Intervalo reducido para clicks más rápidos
 local lastClickTime = 0
 
--- Función para activar o desactivar el auto clicker (sin mensajes)
 local function toggleAutoClicker()
     isAutoClickerActive = not isAutoClickerActive
-    -- Sin print aquí
 end
 
--- Detecta clicks manuales y tecla F1 para toggle (sin mensajes)
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
     if not gameProcessed then
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
             if not isAutoClickerActive then
                 isAutoClickerActive = true
-                -- Sin print aquí
             end
         elseif input.KeyCode == Enum.KeyCode.F1 then
             toggleAutoClicker()
