@@ -1,11 +1,38 @@
--- ⚡ Ultra Fast Auto Clicker para Roblox (ataques rápidos)
--- Asegúrate de tener tu poder o habilidad equipada
+local VirtualUser = game:GetService("VirtualUser")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
 
-local VirtualUser = game:service("VirtualUser")
-local RunService = game:service("RunService")
+local isAutoClickerActive = false
+local clickInterval = 0.01 -- Ajusta el tiempo entre clicks
+local lastClickTime = 0
 
-RunService.RenderStepped:Connect(function()
-    VirtualUser:Button1Down(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
-    VirtualUser:Button1Up(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
-    task.wait(0.0001) -- ⚠️ Puedes probar 0.005, pero 0.01 ya es MUY rápido
+-- Función para activar o desactivar el auto clicker
+local function toggleAutoClicker()
+    isAutoClickerActive = not isAutoClickerActive
+    print("Auto Clicker está ahora " .. (isAutoClickerActive and "ACTIVO" or "INACTIVO"))
+end
+
+-- Detecta clicks manuales y tecla F1 para toggle
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if not gameProcessed then
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            if not isAutoClickerActive then
+                isAutoClickerActive = true
+                print("Auto Clicker ACTIVADO automáticamente tras detectar click manual")
+            end
+        elseif input.KeyCode == Enum.KeyCode.F1 then
+            toggleAutoClicker()
+        end
+    end
+end)
+
+RunService.RenderStepped:Connect(function(dt)
+    if isAutoClickerActive then
+        local currentTime = tick()
+        if currentTime - lastClickTime >= clickInterval then
+            VirtualUser:Button1Down(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
+            VirtualUser:Button1Up(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
+            lastClickTime = currentTime
+        end
+    end
 end)
